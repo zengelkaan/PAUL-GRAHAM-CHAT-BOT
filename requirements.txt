@@ -1,0 +1,10 @@
+flask
+flask_cors
+openai
+faiss-cpu
+sentence-transformers
+numpy
+tqdm
+beautifulsoup4
+requests
+python-dotenv
