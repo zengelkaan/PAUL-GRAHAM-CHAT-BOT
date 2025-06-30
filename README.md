@@ -116,5 +116,5 @@ Located in `templates/index.html` or your chosen frontend folder.
 
 ## 📬 Contact
 
-Developed by [Your Name]  
+Developed by Kaan Zenğel.  
 For educational or demo purposes.
