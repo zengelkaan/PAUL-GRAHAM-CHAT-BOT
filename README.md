@@ -1,22 +1,22 @@
 # VELA-CASE
-# 🧠 Paul Graham RAG Chatbot
+#  Paul Graham RAG Chatbot
 
 This is a Retrieval-Augmented Generation (RAG) chatbot that answers user questions using the essays of Paul Graham. It fetches the most relevant essay using vector similarity (FAISS) and responds in Paul Graham's style using OpenAI's GPT model.
 
 ---
 
-## ✅ Features
+##  Features
 
-- 🧠 Uses **RAG architecture** (semantic search + LLM generation)
-- 📚 Scrapes and indexes **Paul Graham's essays**
-- ⚡ Fast similarity search using **FAISS**
-- 🤖 Generates context-aware responses with **OpenAI GPT-3.5**
-- 💬 Frontend chat interface (HTML + JavaScript)
-- 💾 Conversation memory with Flask session
+-  Uses **RAG architecture** (semantic search + LLM generation)
+-  Scrapes and indexes **Paul Graham's essays**
+-  Fast similarity search using **FAISS**
+-  Generates context-aware responses with **OpenAI GPT-3.5**
+-  Frontend chat interface (HTML + JavaScript)
+-  Conversation memory with Flask session
 
 ---
 
-## 🛠️ Tools & Libraries Used
+##  Tools & Libraries Used
 
 | Tool/Library           | Purpose                                |
 |------------------------|----------------------------------------|
@@ -31,7 +31,7 @@ This is a Retrieval-Augmented Generation (RAG) chatbot that answers user questio
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 .
@@ -48,7 +48,7 @@ This is a Retrieval-Augmented Generation (RAG) chatbot that answers user questio
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙ Installation & Setup
 
 1. **Clone this repository**  
    ```bash
@@ -70,12 +70,12 @@ This is a Retrieval-Augmented Generation (RAG) chatbot that answers user questio
 4. **Set your OpenAI API key**  
    Create a `.env` file:
    ```env
-   OPENAI_API_KEY=your_openai_api_key_here
+   OPENAI_API_KEY=***********
    ```
 
 ---
 
-## 🔧 Running the System
+##  Running the System
 
 ### 1. Scrape essays *(Run once)*  
 ```bash
@@ -99,7 +99,7 @@ Located in `templates/index.html` or your chosen frontend folder.
 
 ---
 
-## 💡 Example Questions to Try
+##  Example Questions to Try
 
 - "Why does Paul Graham believe in working on your own projects?"
 - "What does he mean by founder mode?"
@@ -107,14 +107,14 @@ Located in `templates/index.html` or your chosen frontend folder.
 
 ---
 
-## 📝 Notes
+##  Notes
 
 - The system uses session-based memory, so follow-up questions will maintain context.
 - You can reset the conversation by sending a POST request to `/reset`.
 
 ---
 
-## 📬 Contact
+##  Contact
 
-Developed by Kaan Zenğel.  
-For educational or demo purposes.
+Developed by Kaan Zenğel. 
+kaan.zengel@sabanciuniv.edu
