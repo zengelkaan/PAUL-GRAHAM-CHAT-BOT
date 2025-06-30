@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ask VELA</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      font-size: 32px;
+      margin: 20px 0 10px;
+    }
+
+    #chatLog {
+      flex: 1;
+      padding: 20px 40px;
+      overflow-y: auto;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: flex-start;
+    }
+
+    .user {
+      justify-content: flex-end;
+    }
+
+    .bot {
+      justify-content: flex-start;
+    }
+
+    .bubble {
+      max-width: 60%;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      line-height: 1.6;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .user .bubble {
+      background-color: #d1e7dd;
+      color: #000;
+      border-top-right-radius: 0;
+      text-align: right;
+    }
+
+    .bot .bubble {
+      background-color: #0dcaf0;
+      color: white;
+      border-top-left-radius: 0;
+      text-align: left;
+    }
+
+    #inputContainer {
+      display: flex;
+      padding: 20px 40px;
+      border-top: 1px solid #ccc;
+      background-color: #fff;
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      background-color: #23c1c4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Ask VELA</h1>
+
+  <div id="chatLog"></div>
+
+  <div id="inputContainer">
+    <input type="text" id="userInput" placeholder="Type your question...">
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="resetConversation()" style="background-color: #dc3545;">Reset</button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const userMessage = document.getElementById("userInput").value;
+      if (!userMessage.trim()) return;
+
+      document.getElementById("chatLog").innerHTML += `
+        <div class="message user">
+          <div class="bubble">${userMessage}</div>
+        </div>
+      `;
+
+      const response = await fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage }),
+        credentials: "include"
+      });
+
+      const data = await response.json();
+
+      document.getElementById("chatLog").innerHTML += `
+        <div class="message bot">
+          <div class="bubble">${data.reply}</div>
+        </div>
+      `;
+
+      document.getElementById("userInput").value = "";
+
+    }
+
+    async function resetConversation() {
+      // Backend'de konuşma geçmişini temizle
+      await fetch("http://127.0.0.1:5000/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+
+      // Frontend'de chat log'u temizle
+      document.getElementById("chatLog").innerHTML = "";
+    }
+
+    document.getElementById("userInput").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+  </script>
+</body>
+</html> 
