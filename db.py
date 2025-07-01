@@ -2,6 +2,9 @@
 # Bu script, Paul Graham'ın makalelerini okuyup embedding'lerini oluşturur ve FAISS kullanarak bir vektör veri tabanı oluşturur.
 # Ardından, bu veritabanını kullanarak kullanıcı postlarına yanıt verecek bir RAG sistemi kurar.
 
+# paul_index.faiss = FAISS index dosyası, embedding'leri hızlıca aramak için kullanılır
+# filepaths.txt = Makalelerin dosya yollarını saklar, hangi makalenin
+
 import os # OS = Dosya ve klasör işlemleri için, makaleleri kaydetmek için klasör oluşturmak, dosyaları yazmak için
 from pathlib import Path # Path = Dosya yollarını yönetmek için, dosya ve klasör yollarını oluşturmak için
 import numpy as np # NumPy = Sayısal işlemler için, embedding'leri numpy array'e dönüştürmek için, FAISS NumPy ile çalışır, Lazım
