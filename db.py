@@ -83,4 +83,3 @@ try:
     
 except Exception as e: # Hata yakala, e = hata mesajı
     print(f" Dosya kaydetme hatası: {e}")
-
