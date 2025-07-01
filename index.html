@@ -1,0 +1,159 @@
+<!-- HTML: SAYFA İÇERİĞİ, MESELA BAŞLIK ATAR-->
+<!-- CSS: SAYFANIN GÖRÜNÜMÜNÜ BELİRLEYEN STİLLERİ, MESELA BAŞLIĞIN NASIL GÖZÜKECEĞİNİ BELİRLER -->
+
+<!DOCTYPE html> <!-- DOSYANIN HTML OLDUGUNU BELIRTIR --> 
+<html lang="en">  <!-- DILIN INGLIZCE OLDUGUNU BELIRTIR -->
+<head> <!-- BAŞLIK BÖLÜMÜ , HTML, SAYFA GÖRÜNÜMÜNDE DOĞRUDAN YER ALMAZ, SAYFA NASIL GÖZÜKMELİ ONU BELİRLER --> 
+  <meta charset="UTF-8">  <!-- KARAKTER KODLAMASINI UTF-8 OLARAK AYARLAR -->
+  <title>Ask VELA</title> <!-- SAYFANIN BAŞLIĞINI BELIRTIR, TAB'DA GÖRÜNÜR -->
+  <style>  /* STİL BÖLÜMÜ , CSS, KULLANICI GÖREMEZ AMA TARAYICI GÖRÜR VE ONA GÖRE ŞEKİLLENDİRİR */ 
+    body { /* BODY BÖLÜMÜ, SAYFANIN TAMAMINI KAPSAR */
+      font-family: 'Segoe UI', sans-serif; /* FONT FAMİLİYASINI BELİRLEME */
+      background-color: #f5f7fa; /* ARKA PLAN RENK */
+      margin: 0; /* MARJINI SIFIRLA, KUTUNUN DİĞER KUTULARA UZAKLIĞI */ 
+      padding: 0; /* PADİNGİ SIFIRLA, KUTUNUN İÇİNDEKİ MESAJIN KUTUYA UZAKLIĞI*/
+      display: flex; /* FLEXBOX KULLANILIR , YANYANA DİZER */
+      flex-direction: column; /* FLEXBOX DIKEY YAPISI, ÜST ÜSTE DİZER */
+      height: 100vh; /* YUKSEKLIGI %100 OLARAK AYARLAR, GÖRÜNTÜ ALANI YÜKSEKLİĞİ */
+    } bc
+
+    h1 { /* H1 ETIKETİ, SAYFA BAŞLIĞINI BELİRTİR */
+      text-align: center; /* METNİ ORTALAR */
+      color: #2c3e50; /* METNİN RENGİ */
+      font-size: 32px; /* METNİN BÜYÜKLÜĞÜ */
+      margin: 20px 0 10px; /* MARJİNİ AYARLAR */
+    }
+
+    #chatLog { /* CHAT LOG BÖLÜMÜ , KULLANICI MESAJLARINI GÖSTERİR, SOHBET KUTUSU, "#" OLMASININ SEBEBİ ID SEÇİCİ OLARAK KULLANILMASI */
+      flex: 1; /* FLEXBOX KAPASİTESİ */
+      padding: 20px 40px; /* PADİNGİ AYARLAR */ 
+      overflow-y: auto; /* YUKSEKLIGI %100 OLARAK AYARLAR */
+    }
+
+    .message { /* MESSAGE BÖLÜMÜ */
+      display: flex; /* FLEXBOX KULLANILIR */
+      margin-bottom: 15px; /* MARJİNİ AYARLAR */
+      align-items: flex-start; /* METNİN YUKSEKLIGİNİ AYARLAR */
+    }
+
+    .user { /* USER BÖLÜMÜ, KULLANICI MESAJLARI SAĞDA OLSUN DİYE */
+      justify-content: flex-end; /* METNİN SAĞA YASLANMASI */
+    }
+
+    .bot { /* BOT BÖLÜMÜ, BOT MESAJLARI SOLDA OLSUN DİYE */
+      justify-content: flex-start; /* METNİN SOLA YASLANMASI */
+    }
+
+    .bubble { /* BUBBLE BÖLÜMÜ, TÜM BUBBLELERİN ORTAK ÖZELLİĞİNİ TANIMLAR */
+      max-width: 60%; /* MAXİMUM GENIŞLIĞI %60 OLARAK AYARLAR */
+      padding: 12px; /* PADİNGİ AYARLAR */
+      border-radius: 10px; /* KENAR YARICAPLARINI AYARLAR */
+      font-size: 16px; /* METNİN BÜYÜKLÜĞÜ */
+      line-height: 1.6; /* SATIR ARALIGI */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* GÖLGE EFEKTİ */
+    }
+ 
+    .user .bubble { /* USER BUBBLE BÖLÜMÜ, ORTAK ÖZELLİKLERİN ÜZERİNE EKLEME YAPTIK */ 
+      background-color: #d1e7dd; /* ARKA PLAN RENK */
+      color: #000; /* METNİN RENGİ */
+      border-top-right-radius: 0; /* SAĞ ÜST KENAR YARICAPLARINI SIFIRLA */
+      text-align: left; /* METNİN SOLA YASLANMASI */
+    }
+
+    .bot .bubble { /* BOT BUBBLE BÖLÜMÜ, ORTAK ÖZELLİKLERİN ÜZERİNE EKLEME YAPTIK */
+      background-color: #0dcaf0; /* ARKA PLAN RENK */
+      color: white; /* METNİN RENGİ */
+      border-top-left-radius: 0; /* SOL ÜST KENAR YARICAPLARINI SIFIRLA */
+      text-align: left; /* METNİN SOLA YASLANMASI */
+    }
+
+    #inputContainer { /* INPUT CONTAINER BÖLÜMÜ, MESAJ KUTUSU VE SEND RESET KUTULARININ TAMAMINI KAPSAR */
+      display: flex; /* FLEXBOX KULLANILIR */
+      padding: 20px 40px; /* PADİNGİ AYARLAR */
+      border-top: 1px solid #ccc; /* ÜST BORU RENK */
+      background-color: #fff; /* ARKA PLAN RENK */
+    }
+
+    #userInput { /* USER INPUT BÖLÜMÜ , METİN KUTUSUNUN KENDİSİ */
+      flex: 1; /* FLEXBOX KAPASİTESİ */
+      padding: 10px; /* PADİNGİ AYARLAR */
+      font-size: 16px; /* METNİN BÜYÜKLÜĞÜ */
+      border: 1px solid #ccc; /* BORU RENK */
+      border-radius: 5px; /* KENAR HAFİF YUVARLAK YAPAR */
+    }
+
+    button { /* BUTTON BÖLÜMÜ */
+      padding: 10px 20px; /* PADİNGİ AYARLAR */
+      font-size: 16px; /* METNİN BÜYÜKLÜĞÜ */
+      margin-left: 10px; /* SOL MARJİN */
+      background-color: #23c1c4; /* ARKA PLAN RENK */
+      color: white; /* METNİN RENGİ */
+      border: none; /* BORU RENK */
+      border-radius: 5px; /* KENARLARI HAFİF YUVARLAK YAPAR */
+      cursor: pointer;
+    }
+  </style>
+</head> 
+<body> <!-- BODY BÖLÜMÜ, SAYFA İÇERİĞİNİN BULUNDUĞU ALAN, KULLANICININ GÖRÜNTÜLEDİĞİ ALAN -->
+
+  <h1>Ask VELA</h1> <!-- H1 ETIKETİ, SAYFA BAŞLIĞINI BELİRTİR -->
+
+  <div id="chatLog"></div> <!-- CHAT MESAJ ALANI -->
+
+  <div id="inputContainer"> <!-- INPUT CONTAINER BÖLÜMÜ -->
+    <input type="text" id="userInput" placeholder="Type your question..."> <!-- USER INPUT BÖLÜMÜ -->
+    <button onclick="sendMessage()">Send</button> <!-- SEND BUTONU --> 
+    <button onclick="resetConversation()" style="background-color: #dc3545;">Reset</button> <!-- RESET BUTONU -->
+  </div>
+
+  <script> /* SCRIPT BÖLÜMÜ, JAVA SCRIPT KODLARI , API İLE İLETİŞİM, BUTONLAR */
+    async function sendMessage() { /* SEND MESSAGE FONKSİYONU */
+      const userMessage = document.getElementById("userInput").value; /* USER MESSAGE BÖLÜMÜ */
+      if (!userMessage.trim()) return; /* USER MESSAGE BÖLÜMÜ */
+
+      document.getElementById("chatLog").innerHTML += `
+        <div class="message user">
+          <div class="bubble">${userMessage}</div>
+        </div>
+      `;
+
+      const response = await fetch("http://127.0.0.1:5000/chat", { /* CHAT BÖLÜMÜ */
+        method: "POST", /* METOD */
+        headers: { "Content-Type": "application/json" }, /* HEADERS */
+        body: JSON.stringify({ message: userMessage }), /* BODY */
+        credentials: "include" /* CREDENTIALS */
+      });
+
+      const data = await response.json();
+
+      document.getElementById("chatLog").innerHTML += `
+      <div class="message bot">
+        <div class="bubble">${data.reply}</div>
+      </div>
+    `;
+
+      document.getElementById("userInput").value = ""; /* USER INPUT BÖLÜMÜ */
+
+    }
+
+    async function resetConversation() { /* RESET CONVERSATION FONKSİYONU */
+      // Backend'de konuşma geçmişini temizle
+      await fetch("http://127.0.0.1:5000/reset", { /* RESET BÖLÜMÜ */
+        method: "POST", /* METOD */
+        headers: { "Content-Type": "application/json" }, /* HEADERS */
+        credentials: "include" /* CREDENTIALS */
+      });
+
+      // Frontend'de chat log'u temizle
+      document.getElementById("chatLog").innerHTML = ""; /* CHAT LOG BÖLÜMÜ */
+    }
+
+    document.getElementById("userInput").addEventListener("keypress", function(event) { /* USER INPUT BÖLÜMÜ */
+    if (event.key === "Enter") { /* ENTER TUŞU BASILDIĞI ZAMAN */   
+      event.preventDefault(); /* EVENT PREVENT DEFAULT */
+      sendMessage(); /* SEND MESSAGE FONKSİYONU */
+    }
+  });
+  </script>
+</body>
+</html>  
