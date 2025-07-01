@@ -1,4 +1,5 @@
 #  WEB SCRAPING: PAUL GRAHAM MAKALALERİNİ ÇEKME, TEK SEFERLİK ÇALIŞIR, EMBEDDİNG OLUŞTURMAZ
+#paul-graham-agent/articles.py oluşturur
 
 import requests # Requests = HTTP istekleri yapmak için, web sayfalarını çekmek için, GET gibi
 from bs4 import BeautifulSoup #HTML sayfalarını ayrıştırmak için, web sayfalarını parse etmek için, HTML içeriğini okumak için
