@@ -1,85 +1,91 @@
-# RAG (Retrieval-Augmented Generation) Sistemi Kurulumu
-# Bu script, Paul Graham'ın makalelerini okuyup embedding'lerini oluşturur ve FAISS kullanarak bir vektör veri tabanı oluşturur.
-# Ardından, bu veritabanını kullanarak kullanıcı postlarına yanıt verecek bir RAG sistemi kurar.
-
-import os # OS = Dosya ve klasör işlemleri için, makaleleri kaydetmek için klasör oluşturmak, dosyaları yazmak için
-from pathlib import Path # Path = Dosya yollarını yönetmek için, dosya ve klasör yollarını oluşturmak için
-import numpy as np # NumPy = Sayısal işlemler için, embedding'leri numpy array'e dönüştürmek için, FAISS NumPy ile çalışır, Lazım
+from flask import Flask, request, jsonify, session  # Flask = Web uygulamasını başlatmak için, Request = Kullanıcı verilerini almak için, jsonify = JSON cevaplarını oluşturmak için, session = Konuşma geçmişini tutmak için
+from flask_cors import CORS # CORS = Cross-Origin Resource Sharing, farklı orijinlerden gelen isteklere izin vermek için
+#BACKEND VE FRONTED FARKLI PORTLARDA ÇALIŞIYORSA CORS GEREKİR
+from sentence_transformers import SentenceTransformer  # SentenceTransformer = Metinleri embedding'lere dönüştürmek için
+# RAG İÇİN GEREKLİ, SORUYU VE PAUL GRAHAM'IN MAKALELERİNİ EMBEDDING'E DÖNÜŞTÜRMEK İÇİN, HEPSİNİ SAYISAL BİR VECTÖR HALİNE GETİRİR
 import faiss # FAISS = Facebook AI Similarity Search, embedding'leri hızlıca aramak için kullanılır, yakın metinleri bulmak için
-from sentence_transformers import SentenceTransformer # SentenceTransformer = Metinleri embedding'lere dönüştürmek için
-from tqdm import tqdm # tqdm = İlerleme çubuğu göstermek için, işlemlerin ilerlemesini görselleştirmek için, kullanmasan da olur 
+import numpy as np # NumPy = Sayısal işlemler için, embedding'leri numpy array'e dönüştürmek için, FAISS NumPy ile çalışır, Lazım
 
-# Makalelerin bulunduğu klasör
-folder = "paul_graham_articles"
+from openai import OpenAI # OpenAI = OpenAI API'yi kullanmak için, GPT-3.5 modeline erişmek için
+import os # OS = API anahtarını okumak için, .env dosyasından API anahtarını almak için
+from dotenv import load_dotenv # Load dotenv = .env dosyasını python uygulamasına yüklemek için
+load_dotenv() # .env dosyasını yükle, API anahtarını almak için 
 
-# Klasör varlığını kontrol et
-if not os.path.exists(folder):
-    print(f"{folder} klasörü bulunamadı!")
-    exit(1)
+# FAISS ve embedding modelini yükle
+model = SentenceTransformer('all-MiniLM-L6-v2') #KÜÇÜK MODEL, HIZLI VE ETKİLİ
+index = faiss.read_index("paul_index.faiss") # FAISS indexi oku, embedding'leri hızlıca aramak için, vektör veri tabanını içerir
 
-texts = []       # Makale içeriklerini tutacak liste
-filepaths = []   # Her dosyanın yolunu saklayacak liste
+# Makale yollarını oku 
+with open("filepaths.txt", "r", encoding="utf-8") as f: # Okuma işlemi, filepaths.txt dosyasından makale yollarını oku, "utf-8" Türkçe karakterleri düzgün okusun diye
+    filepaths = [line.strip() for line in f.readlines()]   # Her satırı oku ve boşlukları temizle
 
-print(" Makaleler okunuyor...") 
+# Flask başlat
+app = Flask(__name__) # Flask uygulamasını başlat, __name__ = Ana modül adı, Flask uygulamasının ismi
+app.secret_key = 'xxxxxxxxxx'  # Session için gerekli
+CORS(app, supports_credentials=True) # CORS'u etkinleştir, farklı orijinlerden gelen isteklere izin ver
 
-# Tüm .txt dosyalarını oku
-for filename in os.listdir(folder): # Klasördeki tüm dosyaları listele, txt dosyalarını bul
-    if filename.endswith(".txt"): # Sadece .txt uzantılı dosyaları işle, html varsa atla
-        path = os.path.join(folder, filename) # Dosya yolunu oluştur, klasör ve dosya adını birleştir, örneğin "paul_graham_articles/essay1.txt"
-        try:
-            with open(path, "r", encoding="utf-8") as f: # Dosyayı oku, "r" = okuma modu, encoding="utf-8" = Türkçe karakterleri düzgün okumak için
-                text = f.read()
-                if text.strip():  # Boş olmayan metinleri ekle
-                    texts.append(text) # Metni listeye ekle
-                    filepaths.append(path) # Dosya yolunu listeye ekle
-                    print(f" {filename} okundu ({len(text)} karakter)")
-        except Exception as e:
-            print(f" {filename} okunamadı: {e}")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) # OpenAI API istemcisini başlat, .env dosyasından API anahtarını al, oku, nesne OpenAI istemcisi
 
-if not texts: # Eğer metin listesi boşsa, hiçbir makale okunamamış demektir
-    print("Hiç metin dosyası bulunamadı!")
-    exit(1)
+@app.route("/chat", methods=["POST"]) # /chat adresine POST isteği geldiğinde bu fonksiyonu çağır
+def chat(): 
+    user_message = request.json.get("message", "")  #Frontend'den gelen JSON verisini al, "message" anahtarını kullanarak kullanıcı mesajını al, yoksa boş bir mesaj al
 
-print(f"\n Toplam {len(texts)} makale bulundu.")  
+    # Session'dan konuşma geçmişini al
+    if 'conversation_history' not in session:
+        session['conversation_history'] = []
+        session['current_context'] = None
 
-# SentenceTransformer modelini yükle
-print("\n Embedding modeli yükleniyor (all-MiniLM-L6-v2)...")
-model = SentenceTransformer('all-MiniLM-L6-v2') # Küçük ve hızlı bir model, embedding'leri hızlıca oluşturmak için kullanılır
+    # Eğer bu ilk mesajsa veya konuşma geçmişi boşsa, yeni arama yap
+    if not session['conversation_history']:
+        # Embedle
+        query_embedding = model.encode([user_message], normalize_embeddings=True) # Kullanıcı mesajını embedding'e dönüştür, normalize et, embedding'ler sayısal vektörlerdir, normalize etmek aynı uzunlukta yapmak demektir, FAISS için uygun hale getirir
+        
+        # FAISS ile en yakın metni bul
+        top_k = 1 # En yakın 1 metni bul, top_k = 1, sadece en yakın metni alacağız
+        D, I = index.search(np.array(query_embedding).astype("float32"), top_k) # FAISS indexinde arama yap, D = mesafe, I = indeks numaraları, embedding'i float32 olarak dönüştür, FAISS bu formatı kullanır
+        top_idx = I[0][0] # En yakın metnin indeksini al, I[0][0] = ilk (ve tek) en yakın metnin indeks numarası
+        file_path = filepaths[top_idx] # En yakın metnin dosya yolunu al, filepaths listesinden indeks numarasına göre dosya yolunu al
 
-# Embedding'leri oluştur
-print("\n Embedding'ler oluşturuluyor...")
-embeddings = model.encode(texts, show_progress_bar=True, convert_to_numpy=True, normalize_embeddings=True)   # Metinleri embedding'lere dönüştür, normalize et, ilerleme çubuğunu göster, numpy array olarak döndür
+        with open(file_path, "r", encoding="utf-8") as f: # En yakın metin dosyasını oku, "utf-8" Türkçe karakterleri düzgün okusun diye
+            context_text = f.read() # Dosya içeriğini oku, context_text = makale içeriği
+        
+        session['current_context'] = context_text
+    else:
+        # Konuşma devam ediyorsa, mevcut context'i kullan
+        context_text = session['current_context']
 
-print(f"\n{len(embeddings)} embedding başarıyla oluşturuldu.")
-
-# Embeddingleri numpy array'e çevir
-embedding_matrix = np.array(embeddings).astype("float32") # FAISS için float32 formatına dönüştür, embedding'leri numpy array olarak sakla
-# biz zaten array olarak aldık, ama yine de güvenli olsun diye numpy array'e çeviriyoruz
-print(f" Embedding matrisi boyutu: {embedding_matrix.shape}")
-
-# FAISS index oluştur
-print("\n FAISS index oluşturuluyor...")
-index = faiss.IndexFlatL2(embedding_matrix.shape[1]) # L2 normuna göre index oluştur, L2= Euclidean mesafeyi kullanarak benzerlik hesapla, sabit boyutlu vektör. 
-#shape[0] = embedding sayısı, shape[1] = embedding boyutu, bize boyutu lazım, mesela 384
-# IndexFlatL2 = Düz bir index, L2 normuna göre benzerlik
-
-index.add(embedding_matrix) # Embedding'leri index'e ekle, FAISS index'e embedding'leri ekler, artık arama yapabiliriz
-
-# FAISS indexi ve dosya yollarını kaydet
-try:
-    faiss.write_index(index, "paul_index.faiss") # FAISS index'i dosyaya kaydet, artık bu index'i kullanarak arama yapabiliriz
-    print(" FAISS index kaydedildi: paul_index.faiss")
+    # Konuşma geçmişini oluştur
+    messages = [
+        {"role": "system", "content": f"You are Paul Graham. Use the following article as context to answer:\n\n{context_text}"}
+    ]
     
-    with open("filepaths.txt", "w", encoding="utf-8") as f: # Dosya yollarını kaydet, her dosyanın yolunu filepaths.txt dosyasına yaz
-        for path in filepaths: 
-            f.write(path + "\n")
-    print(" Dosya yolları kaydedildi: filepaths.txt")
+    # Önceki konuşma geçmişini ekle
+    for msg in session['conversation_history']:
+        messages.append(msg)
     
-    print(f"\n RAG sistemi başarıyla kuruldu!")
-    print(f" {len(texts)} makale işlendi")
-    print(f" {len(embeddings)} embedding oluşturuldu")
-    print(f" Index boyutu: {embedding_matrix.shape}")
-    print(f" Kullanılan model: all-MiniLM-L6-v2 (sentence-transformers)")
+    # Kullanıcının yeni mesajını ekle
+    messages.append({"role": "user", "content": user_message})
+
+    # GPT'ye kontekstle birlikte gönder
+    response = client.chat.completions.create( # OpenAI API'ye istek at, chat completion oluştur
+        model="gpt-3.5-turbo", # Modeli belirle, gpt-3.5-turbo modeli kullanılıyor
+        messages=messages  # Prompt engineering, mesajları ayarla
+    )
+
+    reply = response.choices[0].message.content # 0 olmasının sebebi, OpenAI API'sinin birden fazla cevap dönebilmesi, ancak biz ilk cevabı alıyoruz, en ilgilisi o, reply = modelin cevabı
     
-except Exception as e: # Hata yakala, e = hata mesajı
-    print(f" Dosya kaydetme hatası: {e}")
+    # Konuşma geçmişini güncelle
+    session['conversation_history'].append({"role": "user", "content": user_message})
+    session['conversation_history'].append({"role": "assistant", "content": reply})
+    
+
+    return jsonify({"reply": reply}) # JSON cevabı olarak döndür, {"reply": modelin cevabı}
+
+@app.route("/reset", methods=["POST"]) # Yeni konuşma başlatmak için
+def reset_conversation():
+    session['conversation_history'] = []
+    session['current_context'] = None
+    return jsonify({"message": "Conversation reset"})
+
+if __name__ == "__main__": # Eğer bu dosya doğrudan çalıştırılırsa, Flask uygulamasını başlat
+    app.run(debug=True) 
